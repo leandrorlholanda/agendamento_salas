@@ -1507,3 +1507,16 @@ button {
         width: 100%;
     }
 }
+
+/* Efeitos adicionais para avatar interativo com foto */
+.user-avatar, .mobile-user-avatar {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+}
+.user-avatar:hover, .mobile-user-avatar:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+    box-shadow: 0 0 8px rgba(0, 56, 168, 0.4);
+}

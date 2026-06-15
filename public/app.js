@@ -236,10 +236,8 @@ function bootApp() {
         profileName.textContent = currentUser.name;
         profileRole.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Colaborador';
         
-        // Iniciais no avatar
-        const initials = currentUser.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-        profileAvatarInitials.textContent = initials;
-        if (mobileUserInitials) mobileUserInitials.textContent = initials;
+        // Renderizar avatar (foto ou iniciais)
+        updateAvatarUI();
         
         // Mostrar abas de admin apenas para administradores
         const adminElements = document.querySelectorAll('.admin-only');
@@ -2074,4 +2072,104 @@ if (printQrcodeBtn) {
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     bootApp();
+});
+
+
+// ==========================================================================
+// UPLOAD DE FOTO DE PERFIL DO COLABORADOR
+// ==========================================================================
+function updateAvatarUI() {
+    if (!currentUser) return;
+    const avatarImg = document.getElementById('user-avatar-img');
+    const avatarText = document.getElementById('user-avatar-text');
+    const mobileAvatarImg = document.getElementById('mobile-avatar-img');
+    const mobileAvatarText = document.getElementById('mobile-avatar-text');
+    
+    const initials = currentUser.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    
+    if (currentUser.photo) {
+        if (avatarImg) {
+            avatarImg.src = currentUser.photo;
+            avatarImg.classList.remove('hidden');
+        }
+        if (avatarText) {
+            avatarText.classList.add('hidden');
+        }
+        if (mobileAvatarImg) {
+            mobileAvatarImg.src = currentUser.photo;
+            mobileAvatarImg.classList.remove('hidden');
+        }
+        if (mobileAvatarText) {
+            mobileAvatarText.classList.add('hidden');
+        }
+    } else {
+        if (avatarImg) {
+            avatarImg.classList.add('hidden');
+        }
+        if (avatarText) {
+            avatarText.textContent = initials;
+            avatarText.classList.remove('hidden');
+        }
+        if (mobileAvatarImg) {
+            mobileAvatarImg.classList.add('hidden');
+        }
+        if (mobileAvatarText) {
+            mobileAvatarText.textContent = initials;
+            mobileAvatarText.classList.remove('hidden');
+        }
+    }
+}
+
+// Lógica de upload de arquivo ao clicar no avatar
+document.addEventListener('DOMContentLoaded', () => {
+    const avatarDiv = document.getElementById('user-avatar-initials');
+    const mobileAvatarDiv = document.getElementById('mobile-user-initials');
+    const fileInput = document.getElementById('avatar-file-input');
+    
+    const handleAvatarClick = () => {
+        if (fileInput) fileInput.click();
+    };
+    
+    if (avatarDiv) avatarDiv.addEventListener('click', handleAvatarClick);
+    if (mobileAvatarDiv) mobileAvatarDiv.addEventListener('click', handleAvatarClick);
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validar tamanho (limitar a 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('A imagem deve ter no máximo 2MB.', 'error');
+                fileInput.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64String = reader.result;
+                
+                // Enviar para o backend
+                const response = await apiFetch('/api/users/update-photo', {
+                    method: 'POST',
+                    body: JSON.stringify({ photo: base64String })
+                });
+                
+                if (response && response.success) {
+                    showToast('Foto de perfil atualizada com sucesso!', 'success');
+                    currentUser.photo = base64String;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    updateAvatarUI();
+                } else {
+                    showToast('Erro ao atualizar foto de perfil.', 'error');
+                }
+                fileInput.value = '';
+            };
+            reader.onerror = () => {
+                showToast('Erro ao ler o arquivo.', 'error');
+                fileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 });
