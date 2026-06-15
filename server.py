@@ -7,6 +7,10 @@ import uuid
 import threading
 import time
 from datetime import datetime, timedelta
+
+def get_now_local():
+    from datetime import timezone
+    return (datetime.now(timezone.utc) - timedelta(hours=3)).replace(tzinfo=None)
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse
 import socket
@@ -25,6 +29,16 @@ try:
 except Exception as e:
     print(f"[AVISO DE REDE/PERMISSÃO] Não foi possível criar a pasta {db_dir} ({e}). Usando base local.")
     DB_FILE = 'database.db'
+
+# Se a base persistente (ex: no disco /data) não existir, mas houver uma base local
+# pré-existente vinda do Git, copia ela para servir de ponto de partida
+try:
+    if DB_FILE != 'database.db' and not os.path.exists(DB_FILE):
+        if os.path.exists('database.db'):
+            print(f"Copiando base de dados inicial do repositório para {DB_FILE}...")
+            shutil.copy2('database.db', DB_FILE)
+except Exception as e:
+    print(f"[AVISO DE IMPORTAÇÃO] Não foi possível copiar base inicial: {e}")
 
 # Garantir diretório de backups
 try:
@@ -55,7 +69,8 @@ def init_db():
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'user'
+            role TEXT NOT NULL DEFAULT 'user',
+            photo TEXT
         )
     ''')
     
@@ -111,6 +126,11 @@ def init_db():
 
     try:
         cursor.execute("ALTER TABLE bookings ADD COLUMN supplier_company TEXT")
+    except sqlite3.OperationalError:
+        pass
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN photo TEXT")
     except sqlite3.OperationalError:
         pass
     
@@ -180,7 +200,7 @@ def no_show_monitor():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            now = datetime.now()
+            now = get_now_local()
             
             # Formato do banco de dados: YYYY-MM-DDTHH:MM
             # Buscar reuniões com status 'confirmed' (ainda sem check-in realizado)
@@ -206,7 +226,7 @@ def no_show_monitor():
 def generate_backup(backup_type="automatic"):
     """Gera um arquivo de backup do banco de dados sqlite"""
     try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = get_now_local().strftime("%Y%m%d_%H%M%S")
         filename = f"backup_{timestamp}.db"
         dest_path = os.path.join(BACKUP_DIR, filename)
         
@@ -218,7 +238,7 @@ def generate_backup(backup_type="automatic"):
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO backup_logs (id, filename, timestamp, type) VALUES (?, ?, ?, ?)",
-            (str(uuid.uuid4()), filename, datetime.now().isoformat(), backup_type)
+            (str(uuid.uuid4()), filename, get_now_local().isoformat(), backup_type)
         )
         conn.commit()
         conn.close()
@@ -277,7 +297,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT u.id, u.name, u.email, u.role
+                SELECT u.id, u.name, u.email, u.role, u.photo
                 FROM sessions s
                 JOIN users u ON s.user_id = u.id
                 WHERE s.token = ?
@@ -443,7 +463,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT id, name, email, password, role FROM users ORDER BY name ASC")
+            cursor.execute("SELECT id, name, email, password, role, photo FROM users ORDER BY name ASC")
             users_list = [dict(row) for row in cursor.fetchall()]
             conn.close()
             return self.send_json(users_list)
@@ -584,7 +604,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 "id": user['id'],
                 "name": user['name'],
                 "email": user['email'],
-                "role": user['role']
+                "role": user['role'],
+                "photo": user['photo']
             }
             
             # Persistir sessão no banco de dados SQLite para evitar deslogar no restart
@@ -593,7 +614,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 cursor = conn.cursor()
                 cursor.execute(
                     "INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)",
-                    (token, user['id'], datetime.now().isoformat())
+                    (token, user['id'], get_now_local().isoformat())
                 )
                 conn.commit()
                 conn.close()
@@ -634,7 +655,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             if start_dt >= end_dt:
                 return self.send_error_json("O horário de início deve ser anterior ao de término.")
                 
-            if start_dt < datetime.now():
+            if start_dt < get_now_local():
                 return self.send_error_json("Não é possível agendar reuniões no passado.")
                 
             # Verificar limite de tempo de reserva (ex: máximo de 4 horas por reunião)
@@ -709,7 +730,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             if start_dt >= end_dt:
                 return self.send_error_json("O horário de início deve ser anterior ao de término.")
                 
-            if start_dt < datetime.now() - timedelta(minutes=10):  # margem de tolerância pequena para edições
+            if start_dt < get_now_local() - timedelta(minutes=10):  # margem de tolerância pequena para edições
                 return self.send_error_json("Não é possível alterar reuniões para o passado.")
                 
             # Verificar limite de tempo de reserva (ex: máximo de 4 horas por reunião)
@@ -798,7 +819,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return self.send_error_json(f"Não é possível fazer check-in. Status atual: {booking['status']}.")
                 
             # Validar janela de tempo para check-in (ex: até 15 min antes e até 15 min depois do horário de início)
-            now = datetime.now()
+            now = get_now_local()
             start_dt = datetime.strptime(booking['start_time'], "%Y-%m-%dT%H:%M")
             
             early_limit = start_dt - timedelta(minutes=15)
@@ -1008,33 +1029,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 return self.send_error_json(f"Erro ao atualizar senha: {e}")
             
-        else:
-            return self.send_error_json("Rota não encontrada", 404)
-
-def get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except Exception:
-        return "127.0.0.1"
-
-def run_server():
-    server_address = ('', PORT)
-    httpd = HTTPServer(server_address, RequestHandler)
-    local_ip = get_local_ip()
-    print(f"==========================================================================")
-    print(f"Servidor Farma Conde Rodando na porta {PORT}!")
-    print(f"  - No computador local:  http://localhost:{PORT}")
-    print(f"  - No celular (mesmo Wi-Fi): http://{local_ip}:{PORT}")
-    print(f"==========================================================================")
-    httpd.serve_forever()
-
-if __name__ == '__main__':
-    run_server()
-               
+        # 11. Atualizar Foto do Usuário
+        elif path == '/api/users/update-photo':
+            user = self.get_authenticated_user()
+            if not user:
+                return self.send_error_json("Não autenticado", 401)
+                
             photo = body.get('photo')  # String base64
             
             try:
