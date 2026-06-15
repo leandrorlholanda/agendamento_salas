@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Salas - Farma Conde</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Notificações Toast -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- TELA DE LOGIN / CADASTRO -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-wrapper">
+                    <!-- Representação SVG premium da logo Farma Conde -->
+                    <svg viewBox="0 0 100 100" class="logo-circle">
+                        <circle cx="50" cy="50" r="48" fill="#FF7000"/>
+                        <rect x="15" y="32" width="70" height="28" rx="4" fill="#0038A8"/>
+                        <text x="50" y="50" fill="#FFFFFF" font-family="'Outfit', sans-serif" font-weight="800" font-size="10" text-anchor="middle">FARMA CONDE</text>
+                        <line x1="20" y1="53" x2="80" y2="53" stroke="#FFFFFF" stroke-width="1"/>
+                        <path d="M47 46 h6 v2 h-6 z M49 44 h2 v6 h-2 z" fill="#FF7000"/>
+                    </svg>
+                </div>
+                <h2>FAMÍLIA CUIDA DE FAMÍLIA</h2>
+                <p class="subtitle">Portal de Agendamento de Salas</p>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="login-form" class="auth-form">
+                <h3>Acesse sua Conta</h3>
+                <div class="form-group">
+                    <label for="login-email">E-mail Corporativo</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="mail"></i>
+                        <input type="email" id="login-email" placeholder="nome@grupofarmaconde.com.br" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Senha</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="login-password" placeholder="Sua senha corporativa" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                <p class="switch-form">Não tem uma conta? <a href="#" id="go-to-register">Cadastre-se</a></p>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="register-form" class="auth-form hidden">
+                <h3>Criar Conta Corporativa</h3>
+                <div class="form-group">
+                    <label for="register-name">Nome Completo</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="user"></i>
+                        <input type="text" id="register-name" placeholder="Ex: Leandro Holanda" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">E-mail Corporativo</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="mail"></i>
+                        <input type="email" id="register-email" placeholder="seuemail@grupofarmaconde.com.br" required>
+                    </div>
+                    <small class="form-hint">Deve terminar com @grupofarmaconde.com.br</small>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Senha</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" required>
+                    </div>
+                </div>
+                
+                <div class="form-group-checkbox">
+                    <input type="checkbox" id="register-is-admin">
+                    <label for="register-is-admin">Registrar como Administrador</label>
+                </div>
+
+                <div id="admin-code-group" class="form-group hidden">
+                    <label for="register-admin-code">Código de Acesso Admin</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="key"></i>
+                        <input type="password" id="register-admin-code" placeholder="Código de liberação (Ex: CONDE123)">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
+                <p class="switch-form">Já tem uma conta? <a href="#" id="go-to-login">Entrar</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- PAINEL PRINCIPAL (DASHBOARD) -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Barra Lateral (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <svg viewBox="0 0 100 100" class="logo-circle-small">
+                    <circle cx="50" cy="50" r="48" fill="#FF7000"/>
+                    <rect x="15" y="32" width="70" height="28" rx="4" fill="#0038A8"/>
+                    <text x="50" y="50" fill="#FFFFFF" font-family="'Outfit', sans-serif" font-weight="800" font-size="10" text-anchor="middle">FARMA CONDE</text>
+                    <line x1="20" y1="53" x2="80" y2="53" stroke="#FFFFFF" stroke-width="1"/>
+                    <path d="M47 46 h6 v2 h-6 z M49 44 h2 v6 h-2 z" fill="#FF7000"/>
+                </svg>
+                <div class="brand-text">
+                    <span class="brand-name">Farma Conde</span>
+                    <span class="brand-tagline">Salas Corporativas</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-target="dashboard-section">
+                    <i data-lucide="calendar"></i>
+                    <span>Agendamentos</span>
+                </a>
+                <a href="#" class="menu-item" data-target="my-bookings-section">
+                    <i data-lucide="bookmark-check"></i>
+                    <span>Minhas Reservas</span>
+                    <span id="my-bookings-badge" class="badge hidden">0</span>
+                </a>
+                <a href="#" class="menu-item admin-only hidden" data-target="admin-section">
+                    <i data-lucide="pie-chart"></i>
+                    <span>Painel Admin</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar-initials">LH</div>
+                    <div class="user-info">
+                        <span class="user-name" id="profile-name">Carregando...</span>
+                        <span class="user-role" id="profile-role">Colaborador</span>
+                    </div>
+                </div>
+                <button id="logout-btn" class="logout-btn" title="Sair">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <!-- HEADER MOBILE (Visível apenas em telas menores) -->
+            <header class="mobile-header">
+                <div class="mobile-brand">
+                    <svg viewBox="0 0 100 100" class="logo-circle-mini">
+                        <circle cx="50" cy="50" r="48" fill="#FF7000"/>
+                        <rect x="15" y="32" width="70" height="28" rx="4" fill="#0038A8"/>
+                        <text x="50" y="50" fill="#FFFFFF" font-family="'Outfit', sans-serif" font-weight="800" font-size="10" text-anchor="middle">FC</text>
+                        <line x1="20" y1="53" x2="80" y2="53" stroke="#FFFFFF" stroke-width="1"/>
+                        <path d="M47 46 h6 v2 h-6 z M49 44 h2 v6 h-2 z" fill="#FF7000"/>
+                    </svg>
+                    <span class="mobile-brand-text">Farma Conde</span>
+                </div>
+                <div class="mobile-header-right">
+                    <div class="mobile-user-avatar" id="mobile-user-initials">LH</div>
+                    <button id="mobile-logout-btn" class="mobile-logout-btn" title="Sair">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- HEADER DA PÁGINA -->
+            <header class="page-header">
+                <div class="header-title-wrapper">
+                    <h1 id="page-title">Agendamentos de Salas</h1>
+                    <p id="page-subtitle" class="subtitle">Gerencie e reserve as salas de reunião da Farma Conde</p>
+                </div>
+                <div class="header-actions">
+                    <button id="new-booking-btn" class="btn btn-accent">
+                        <i data-lucide="plus-circle"></i> Nova Reserva
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTEÚDO DINÂMICO DE SEÇÕES -->
+            
+            <!-- 1. SEÇÃO DE AGENDAMENTOS (DASHBOARD) -->
+            <section id="dashboard-section" class="content-section">
+                <!-- Filtro de Data e Grid -->
+                <div class="toolbar">
+                    <div class="date-picker-wrapper">
+                        <button id="prev-day-btn" class="btn-icon"><i data-lucide="chevron-left"></i></button>
+                        <input type="date" id="dashboard-date" class="date-input">
+                        <button id="next-day-btn" class="btn-icon"><i data-lucide="chevron-right"></i></button>
+                        <button id="today-btn" class="btn btn-secondary">Hoje</button>
+                    </div>
+                    <div class="legend">
+                        <span class="legend-item"><span class="color-box confirmed"></span> Confirmado</span>
+                        <span class="legend-item"><span class="color-box checked_in"></span> Check-in Realizado</span>
+                        <span class="legend-item"><span class="color-box no-show"></span> No-show</span>
+                    </div>
+                </div>
+
+                <!-- Grid de Salas -->
+                <div class="rooms-grid" id="rooms-grid">
+                    <!-- Os cards de salas serão injetados dinamicamente via JS -->
+                </div>
+            </section>
+
+            <!-- 2. SEÇÃO DE MINHAS RESERVAS -->
+            <section id="my-bookings-section" class="content-section hidden">
+                <div class="table-container card">
+                    <div class="card-header">
+                        <h3>Suas Reservas Realizadas</h3>
+                        <p>Você pode alterar ou cancelar apenas reservas criadas pelo seu usuário.</p>
+                    </div>
+                    <table class="data-table" id="my-bookings-table">
+                        <thead>
+                            <tr>
+                                <th>Sala</th>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="my-bookings-list">
+                            <!-- Injetado dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                    <div id="no-bookings-msg" class="empty-state hidden">
+                        <i data-lucide="calendar-x"></i>
+                        <p>Você ainda não possui agendamentos cadastrados.</p>
+                        <button class="btn btn-accent new-booking-trigger">Reservar Sala Agora</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. SEÇÃO DE PAINEL ADMIN -->
+            <section id="admin-section" class="content-section hidden">
+                <!-- Cards de Métricas -->
+                <div class="metrics-grid">
+                    <div class="metric-card card">
+                        <div class="metric-icon blue"><i data-lucide="calendar-days"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-label">Total de Reservas</span>
+                            <span class="metric-value" id="metric-total-bookings">0</span>
+                        </div>
+                    </div>
+                    <div class="metric-card card">
+                        <div class="metric-icon orange"><i data-lucide="check-square"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-label">Check-ins Realizados</span>
+                            <span class="metric-value" id="metric-checked-in">0</span>
+                        </div>
+                    </div>
+                    <div class="metric-card card">
+                        <div class="metric-icon red"><i data-lucide="user-x"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-label">Taxa de No-Show</span>
+                            <span class="metric-value" id="metric-no-show-rate">0%</span>
+                        </div>
+                    </div>
+                    <div class="metric-card card">
+                        <div class="metric-icon green"><i data-lucide="percent"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-label">Taxa de Ocupação Média</span>
+                            <span class="metric-value" id="metric-occupancy-rate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Relatórios Visuais e Controle de Backup -->
+                <div class="admin-grid">
+                    <!-- Gráficos -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>Reservas por Sala</h3>
+                        </div>
+                        <div class="chart-container" id="rooms-chart-container">
+                            <!-- Gráficos gerados em SVG pelo JS -->
+                        </div>
+                    </div>
+
+                    <!-- Promoção de Usuário para Admin -->
+                    <div class="card master-admin-only hidden">
+                        <div class="card-header">
+                            <h3>Promover Colaborador a Admin</h3>
+                            <p>Forneça privilégios administrativos para visualizar relatórios e backups.</p>
+                        </div>
+                        <form id="promote-admin-form" class="admin-form">
+                            <div class="form-group">
+                                <label for="promote-email">E-mail do Colaborador</label>
+                                <div class="input-with-icon">
+                                    <i data-lucide="mail"></i>
+                                    <input type="email" id="promote-email" placeholder="nome@grupofarmaconde.com.br" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Promover</button>
+                        </form>
+                    </div>
+
+                    <!-- Relatório Geral de Reservas (Admin) -->
+                    <div class="card span-2">
+                        <div class="card-header">
+                            <h3>Relatório Geral de Reservas</h3>
+                            <p>Visualização unificada de todos os agendamentos corporativos. Administradores podem gerenciar qualquer reserva.</p>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sala</th>
+                                        <th>Colaborador</th>
+                                        <th>Data</th>
+                                        <th>Horário</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-bookings-list">
+                                    <!-- Injetado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Gerenciamento de Salas (Admin) -->
+                    <div class="card span-2 master-admin-only hidden">
+                        <div class="card-header">
+                            <h3>Gerenciamento de Salas</h3>
+                            <p>Edite os nomes, capacidade e recursos de cada sala corporativa.</p>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome da Sala</th>
+                                        <th>Capacidade</th>
+                                        <th>Recursos (Possui)</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-rooms-list">
+                                    <!-- Injetado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Gerenciamento de Usuários (Admin) -->
+                    <div class="card span-2 master-admin-only hidden">
+                        <div class="card-header">
+                            <h3>Gerenciamento de Usuários</h3>
+                            <p>Visualize, edite a senha ou remova usuários cadastrados no sistema.</p>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>E-mail</th>
+                                        <th>Senha</th>
+                                        <th>Perfil</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-list">
+                                    <!-- Injetado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Gestão de Backups -->
+                    <div class="card span-2 master-admin-only hidden">
+                        <div class="card-header">
+                            <div class="header-with-action">
+                                <div>
+                                    <h3>Backups Diários e Histórico</h3>
+                                    <p>O sistema faz backup automático a cada 24 horas no diretório local <code>/backups</code>.</p>
+                                </div>
+                                <div class="action-buttons">
+                                    <button id="trigger-backup-btn" class="btn btn-accent">
+                                        <i data-lucide="database"></i> Forçar Backup Agora
+                                    </button>
+                                    <a href="/api/admin/backup/download" id="download-db-btn" class="btn btn-secondary">
+                                        <i data-lucide="download"></i> Download database.db
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Arquivo de Backup</th>
+                                        <th>Data/Hora da Geração</th>
+                                        <th>Tipo</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="backups-list">
+                                    <!-- Injetado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- BARRA DE NAVEGAÇÃO INFERIOR PARA DISPOSITIVOS MÓVEIS -->
+        <nav class="mobile-bottom-nav">
+            <a href="#" class="mobile-nav-item active" data-target="dashboard-section">
+                <i data-lucide="calendar"></i>
+                <span>Agendas</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="my-bookings-section">
+                <i data-lucide="bookmark-check"></i>
+                <span>Minhas Reservas</span>
+                <span id="mobile-my-bookings-badge" class="mobile-badge hidden">0</span>
+            </a>
+            <a href="#" class="mobile-nav-item admin-only hidden" data-target="admin-section">
+                <i data-lucide="pie-chart"></i>
+                <span>Painel Admin</span>
+            </a>
+        </nav>
+
+        <!-- BOTÃO FLUTUANTE (FAB) PARA CELULARES -->
+        <button id="mobile-fab-btn" class="mobile-fab" title="Nova Reserva">
+            <i data-lucide="plus"></i>
+        </button>
+    </div>
+
+    <!-- MODAL DE NOVA RESERVA -->
+    <div id="booking-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="booking-modal-title">Reservar Sala de Reunião</h3>
+                <button class="close-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="booking-form" class="modal-form">
+                <input type="hidden" id="booking-id">
+                <div class="form-group">
+                    <label for="booking-room">Escolha a Sala</label>
+                    <select id="booking-room" required>
+                        <!-- Injetado dinamicamente via JS -->
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="form-group col">
+                        <label for="booking-organizer">Responsável / Solicitante</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="user"></i>
+                            <input type="text" id="booking-organizer" placeholder="Ex: Leandro Holanda" required>
+                        </div>
+                    </div>
+                    <div class="form-group col">
+                        <label for="booking-company">Empresa / Setor</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="building"></i>
+                            <input type="text" id="booking-company" placeholder="Ex: Farma Conde" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col">
+                        <label for="booking-supplier-name">Fornecedor / Contato</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="user-check"></i>
+                            <input type="text" id="booking-supplier-name" placeholder="Ex: João Silva" required>
+                        </div>
+                    </div>
+                    <div class="form-group col">
+                        <label for="booking-supplier-company">Empresa do Fornecedor</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="briefcase"></i>
+                            <input type="text" id="booking-supplier-company" placeholder="Ex: Cimed" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="margin-bottom: 8px; display: block;">Tipo de Reunião</label>
+                    <div class="meeting-type-selector">
+                        <button type="button" class="meeting-type-btn active" data-value="presencial">
+                            <i data-lucide="users"></i> Presencial
+                        </button>
+                        <button type="button" class="meeting-type-btn" data-value="videoconferencia">
+                            <i data-lucide="video"></i> Vídeo Chamada
+                        </button>
+                    </div>
+                    <input type="hidden" id="booking-meeting-type" value="presencial">
+                </div>
+                <div class="form-group">
+                    <label for="booking-date">Data da Reunião</label>
+                    <input type="date" id="booking-date" required>
+                </div>
+                <div class="row">
+                    <div class="form-group col">
+                        <label for="booking-start">Horário de Início</label>
+                        <input type="time" id="booking-start" required>
+                    </div>
+                    <div class="form-group col">
+                        <label for="booking-end">Horário de Término</label>
+                        <input type="time" id="booking-end" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Agendamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE AGENDA SEMANAL (CALENDÁRIO DA SEMANA) -->
+    <div id="weekly-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 1000px; width: 95%;">
+            <div class="modal-header">
+                <h3 id="weekly-modal-title">Agenda Semanal - Sala</h3>
+                <button class="close-weekly-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="toolbar" style="box-shadow: none; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <div class="date-picker-wrapper">
+                        <button id="prev-week-btn" class="btn-icon"><i data-lucide="chevron-left"></i></button>
+                        <span id="weekly-range-label" style="font-weight: 600; font-size: 0.95rem; min-width: 200px; text-align: center;">Semana de --/-- a --/--</span>
+                        <button id="next-week-btn" class="btn-icon"><i data-lucide="chevron-right"></i></button>
+                        <button id="current-week-btn" class="btn btn-secondary">Semana Atual</button>
+                        <button id="print-weekly-btn" class="btn btn-accent" style="margin-left: 8px;">
+                            <i data-lucide="printer"></i> Imprimir Agenda
+                        </button>
+                    </div>
+                    <div class="legend" style="margin-bottom: 0;">
+                        <span class="legend-item"><span class="color-box confirmed" style="background-color: #D1FAE5; border: 1px solid #A7F3D0;"></span> Confirmado</span>
+                        <span class="legend-item"><span class="color-box checked_in" style="background-color: #E0F2FE; border: 1px solid #BAE6FD;"></span> Check-in Realizado</span>
+                        <span class="legend-item"><span class="color-box no-show" style="background-color: #FEE2E2; border: 1px solid #FCA5A5;"></span> No-show</span>
+                    </div>
+                </div>
+                <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+                    <table class="data-table weekly-calendar-table" style="text-align: center;">
+                        <thead>
+                            <tr id="weekly-table-header">
+                                <th style="width: 12%; text-align: center;">Horário</th>
+                                <th style="width: 17.6%; text-align: center;" id="weekly-day-0">Segunda</th>
+                                <th style="width: 17.6%; text-align: center;" id="weekly-day-1">Terça</th>
+                                <th style="width: 17.6%; text-align: center;" id="weekly-day-2">Quarta</th>
+                                <th style="width: 17.6%; text-align: center;" id="weekly-day-3">Quinta</th>
+                                <th style="width: 17.6%; text-align: center;" id="weekly-day-4">Sexta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weekly-calendar-grid">
+                            <!-- Preenchido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid var(--border-color); margin-top: 0;">
+                <button class="btn btn-secondary close-weekly-modal-btn">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDITAR SALA (ADMIN) -->
+    <div id="room-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Editar Sala Corporativa</h3>
+                <button class="close-room-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="room-form" class="modal-form">
+                <input type="hidden" id="edit-room-id">
+                <div class="form-group">
+                    <label for="edit-room-name">Nome da Sala</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="door-open"></i>
+                        <input type="text" id="edit-room-name" required placeholder="Ex: Sala Fênix">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-room-capacity">Capacidade (Pessoas)</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="users"></i>
+                        <input type="number" id="edit-room-capacity" required min="1" placeholder="Ex: 8">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-room-features">Recursos (Separados por vírgula)</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="cpu"></i>
+                        <input type="text" id="edit-room-features" placeholder="Ex: TV 50&quot;, Ar Condicionado, Lousa">
+                    </div>
+                    <small class="form-hint">Escreva os recursos separados por vírgula</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-room-modal-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDITAR SENHA DE USUÁRIO (ADMIN) -->
+    <div id="user-password-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Alterar Senha do Usuário</h3>
+                <button class="close-user-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="user-password-form" class="modal-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label for="edit-user-name">Usuário</label>
+                    <input type="text" id="edit-user-name" disabled style="background-color: var(--bg-color); cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label for="edit-user-password">Nova Senha</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="edit-user-password" required placeholder="Nova senha (mínimo 6 caracteres)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-user-modal-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE QR CODE DA SALA -->
+    <div id="qrcode-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 400px; width: 90%; text-align: center;">
+            <div class="modal-header">
+                <h3>QR Code da Sala</h3>
+                <button class="close-qrcode-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div id="qrcode-print-area" class="qrcode-print-card" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 24px; background: white; color: #1E293B;">
+                    <div style="margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 100 100" style="width: 50px; height: 50px;">
+                            <circle cx="50" cy="50" r="48" fill="#FF7000"/>
+                            <rect x="15" y="32" width="70" height="28" rx="4" fill="#0038A8"/>
+                            <text x="50" y="50" fill="#FFFFFF" font-family="'Outfit', sans-serif" font-weight="800" font-size="10" text-anchor="middle">FARMA CONDE</text>
+                            <line x1="20" y1="53" x2="80" y2="53" stroke="#FFFFFF" stroke-width="1"/>
+                            <path d="M47 46 h6 v2 h-6 z M49 44 h2 v6 h-2 z" fill="#FF7000"/>
+                        </svg>
+                        <h2 id="qrcode-room-name" style="margin: 8px 0 0 0; font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0038A8; text-transform: uppercase;">Sala Fênix</h2>
+                        <span id="qrcode-room-info" style="font-size: 0.85rem; color: #64748B; font-weight: 500;">Capacidade: 8 Pessoas</span>
+                    </div>
+                    <div id="qrcode-container" style="display: flex; justify-content: center; margin: 20px 0; padding: 10px; background: white; border: 1px solid #E2E8F0; border-radius: var(--border-radius-sm);"></div>
+                    <div style="font-size: 0.75rem; color: #64748B; margin-top: 12px; line-height: 1.4;">
+                        Aponte a câmera do seu celular para ver a agenda e reservar esta sala.
+                    </div>
+                </div>
+                <!-- Alerta de Localhost (Exibido dinamicamente via JS) -->
+                <div id="qrcode-localhost-warning" class="hidden" style="background-color: #FEF3C7; border: 1px solid #FCD34D; color: #92400E; padding: 10px; border-radius: var(--border-radius-sm); font-size: 0.75rem; margin-top: 12px; text-align: left; line-height: 1.4;">
+                    ⚠️ <strong>Aviso de Rede:</strong> Você acessou como <code>localhost</code>. Para que celulares na mesma rede consigam acessar, abra este painel no computador usando o IP local (ex: <code id="localhost-warning-ip">http://192.168.X.X:8000</code>) antes de gerar o QR Code.
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-secondary close-qrcode-modal-btn">Fechar</button>
+                <button id="print-qrcode-btn" class="btn btn-primary">
+                    <i data-lucide="printer"></i> Imprimir QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
