@@ -18,13 +18,23 @@ BACKUP_DIR = os.environ.get('BACKUP_PATH', 'backups')
 SECRET_ADMIN_CODE = 'CONDE123'  # Código para registro de admins
 
 # Garantir diretório do banco de dados (caso esteja em subpasta)
-db_dir = os.path.dirname(DB_FILE)
-if db_dir and not os.path.exists(db_dir):
-    os.makedirs(db_dir)
+try:
+    db_dir = os.path.dirname(DB_FILE)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+except Exception as e:
+    print(f"[AVISO DE REDE/PERMISSÃO] Não foi possível criar a pasta {db_dir} ({e}). Usando base local.")
+    DB_FILE = 'database.db'
 
 # Garantir diretório de backups
-if not os.path.exists(BACKUP_DIR):
-    os.makedirs(BACKUP_DIR)
+try:
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR)
+except Exception as e:
+    print(f"[AVISO DE REDE/PERMISSÃO] Não foi possível criar a pasta de backup {BACKUP_DIR} ({e}). Usando backups locais.")
+    BACKUP_DIR = 'backups'
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR)
 
 # Dicionário em memória para sessões (token -> user_info)
 SESSIONS = {}
