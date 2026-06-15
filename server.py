@@ -1034,3 +1034,48 @@ def run_server():
 
 if __name__ == '__main__':
     run_server()
+               
+            photo = body.get('photo')  # String base64
+            
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("UPDATE users SET photo = ? WHERE id = ?", (photo, user['id']))
+                conn.commit()
+                conn.close()
+                
+                # Atualizar a sessão em memória se existir
+                for token, sess in SESSIONS.items():
+                    if sess['id'] == user['id']:
+                        sess['photo'] = photo
+                        
+                return self.send_json({"success": True, "message": "Foto de perfil atualizada com sucesso!"})
+            except Exception as e:
+                return self.send_error_json(f"Erro ao atualizar foto: {e}")
+
+        else:
+            return self.send_error_json("Rota não encontrada", 404)
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+def run_server():
+    server_address = ('', PORT)
+    httpd = HTTPServer(server_address, RequestHandler)
+    local_ip = get_local_ip()
+    print(f"==========================================================================")
+    print(f"Servidor Farma Conde Rodando na porta {PORT}!")
+    print(f"  - No computador local:  http://localhost:{PORT}")
+    print(f"  - No celular (mesmo Wi-Fi): http://{local_ip}:{PORT}")
+    print(f"==========================================================================")
+    httpd.serve_forever()
+
+if __name__ == '__main__':
+    run_server()
